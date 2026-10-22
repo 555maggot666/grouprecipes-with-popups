@@ -178,11 +178,26 @@ namespace GroupRecipesWithPopups.Harness
                 yield break;
             }
 
+            yield return Scenario("synth-typed-rpc", () =>
+            {
+                // The old Deliver handed the raw package to the stored delegate, which only works for
+                // RouteMethod<ZPackage>. A typed registration proves the RoutedMethodBase.Invoke path.
+                bool seen = false;
+                ZRoutedRpc.instance.Register<bool>("VTK_SelfTest_Typed",
+                    (long sender, bool value) => { seen = value; });
+
+                var payload = new ZPackage();
+                payload.Write(true);
+                Assert(RpcSynth.Deliver("VTK_SelfTest_Typed", payload, FakePeer), "typed handler not registered");
+                Assert(seen, "the bool argument did not survive synthetic delivery");
+            });
+
             yield return Scenario("server-receive-path", () =>
             {
                 int before = ledger.Count;
+                // Deliberately not rewound: Deliver wraps the payload like the network layer does, so the
+                // handler must see a fresh package at position 0 regardless.
                 ZPackage package = SyncProtocol.EncodeChunks(LiveEntries(40, "recv"), bulk: false)[0];
-                RpcSynth.Rewind(package);
                 Assert(RpcSynth.Deliver(SyncProtocol.RpcNew, package, FakePeer), "no handler registered for " + SyncProtocol.RpcNew);
                 AssertEqual(before + 40, ledger.Count, "server ledger grew by the injected batch");
                 Detail("server ledger: " + before + " -> " + ledger.Count);
@@ -192,7 +207,6 @@ namespace GroupRecipesWithPopups.Harness
             {
                 int before = ledger.Count;
                 ZPackage package = SyncProtocol.EncodeChunks(LiveEntries(40, "recv"), bulk: false)[0];
-                RpcSynth.Rewind(package);
                 RpcSynth.Deliver(SyncProtocol.RpcNew, package, FakePeer);
                 AssertEqual(before, ledger.Count, "a resent batch must not change the ledger");
             });
@@ -201,7 +215,6 @@ namespace GroupRecipesWithPopups.Harness
             {
                 int before = ledger.Count;
                 ZPackage package = SyncProtocol.EncodeChunks(LiveEntries(10, "self"), bulk: false)[0];
-                RpcSynth.Rewind(package);
                 RpcSynth.Deliver(SyncProtocol.RpcNew, package, ZNet.GetUID());
                 AssertEqual(before, ledger.Count, "a batch from our own uid must be ignored");
             });
@@ -214,7 +227,6 @@ namespace GroupRecipesWithPopups.Harness
                 package.Write((byte)7);
                 package.Write(3);
                 package.Write("only half an entry");
-                RpcSynth.Rewind(package);
                 RpcSynth.Deliver(SyncProtocol.RpcNew, package, FakePeer);
                 AssertEqual(before, ledger.Count, "a broken package must not change the ledger");
             });
