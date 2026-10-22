@@ -1,0 +1,17 @@
+# Build output
+bin/
+obj/
+dist/
+*.zip
+
+# Game / BepInEx reference assemblies must never be committed
+lib/
+
+# IDE / OS
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+.DS_Store
+Thumbs.db

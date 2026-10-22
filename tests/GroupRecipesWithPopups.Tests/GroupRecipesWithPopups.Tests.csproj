@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>10.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <RootNamespace>GroupRecipesWithPopups.Tests</RootNamespace>
+    <AssemblyName>GroupRecipesWithPopups.Tests</AssemblyName>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\GroupRecipesWithPopups.Core\GroupRecipesWithPopups.Core.csproj" />
+  </ItemGroup>
+
+</Project>

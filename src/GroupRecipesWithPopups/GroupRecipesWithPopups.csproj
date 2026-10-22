@@ -1,0 +1,77 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>10.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <AssemblyName>GroupRecipesWithPopups</AssemblyName>
+    <RootNamespace>GroupRecipesWithPopups</RootNamespace>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <InformationalVersion>1.0.0</InformationalVersion>
+    <Product>GroupRecipes with Popups</Product>
+    <Company>555maggot666</Company>
+    <Copyright>Copyright (c) 2026 555maggot666</Copyright>
+    <Description>Shares recipe, material, piece and crafting-station discoveries with every player in a Valheim world and shows the original unlock popups.</Description>
+    <Deterministic>true</Deterministic>
+    <DebugType>portable</DebugType>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <!-- The game and BepInEx assemblies are Mono/.NET Framework assemblies; do not warn about the mismatch. -->
+    <NoWarn>$(NoWarn);MSB3277;CS1701;CS1702;NU1701</NoWarn>
+  </PropertyGroup>
+
+  <!--
+    Reference locations. Both values are read from the environment (or may be passed with -p:NAME=value).
+    The build aborts with a clear error when one is missing; no game or BepInEx assembly is ever stored in the repository.
+  -->
+  <PropertyGroup>
+    <GrwpManagedDir>$(VH_MANAGED_DIR)</GrwpManagedDir>
+    <GrwpCoreDir>$(BEPINEX_CORE_DIR)</GrwpCoreDir>
+  </PropertyGroup>
+
+  <Target Name="GrwpCheckReferencePaths" BeforeTargets="BeforeResolveReferences;ResolveAssemblyReferences;CoreCompile">
+    <Error Condition="'$(GrwpManagedDir)' == ''"
+           Text="VH_MANAGED_DIR is not set. Point it at the Valheim 'Managed' directory (the folder containing assembly_valheim.dll), e.g. VH_MANAGED_DIR=/path/to/valheim_server_Data/Managed" />
+    <Error Condition="'$(GrwpCoreDir)' == ''"
+           Text="BEPINEX_CORE_DIR is not set. Point it at the BepInEx 'core' directory (the folder containing BepInEx.dll and 0Harmony.dll), e.g. BEPINEX_CORE_DIR=/path/to/BepInEx/core" />
+    <Error Condition="'$(GrwpManagedDir)' != '' And !Exists('$(GrwpManagedDir)/assembly_valheim.dll')"
+           Text="VH_MANAGED_DIR='$(GrwpManagedDir)' does not contain assembly_valheim.dll." />
+    <Error Condition="'$(GrwpCoreDir)' != '' And !Exists('$(GrwpCoreDir)/BepInEx.dll')"
+           Text="BEPINEX_CORE_DIR='$(GrwpCoreDir)' does not contain BepInEx.dll." />
+    <Error Condition="'$(GrwpCoreDir)' != '' And !Exists('$(GrwpCoreDir)/0Harmony.dll')"
+           Text="BEPINEX_CORE_DIR='$(GrwpCoreDir)' does not contain 0Harmony.dll." />
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GroupRecipesWithPopups.Core\GroupRecipesWithPopups.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="BepInEx">
+      <HintPath>$(GrwpCoreDir)/BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(GrwpCoreDir)/0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="assembly_valheim">
+      <HintPath>$(GrwpManagedDir)/assembly_valheim.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="assembly_utils">
+      <HintPath>$(GrwpManagedDir)/assembly_utils.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(GrwpManagedDir)/UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(GrwpManagedDir)/UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>
