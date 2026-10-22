@@ -225,6 +225,7 @@ namespace GroupRecipesWithPopups.Net
             _backlog.Clear();
             _popupBudgets.Clear();
             _pump.Clear();
+            _unlocker.Reset();
             _uploadedOnce = false;
             _hiddenTotal = 0;
             _noticeReady = false;

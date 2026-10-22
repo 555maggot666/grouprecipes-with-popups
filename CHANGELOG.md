@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2
+- Clears the held back piece list when the connection or world changes, so leftovers cannot be applied
+  in the next world.
+
 ## 1.0.1
 - Rebuilds the build-piece catalogue once when an incoming piece is unknown, so mods that add build pieces
   without adding items or recipes are picked up instead of being skipped.

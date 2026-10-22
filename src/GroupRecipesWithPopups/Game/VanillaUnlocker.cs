@@ -51,6 +51,13 @@ namespace GroupRecipesWithPopups.Game
             return true;
         }
 
+        /// <summary>Drops held back pieces; called when the connection or world changes.</summary>
+        public void Reset()
+        {
+            _deferredPieces.Clear();
+            _deferredKeys.Clear();
+        }
+
         /// <summary>Retries pieces that were held back because the build ui was not ready yet.</summary>
         public void Tick(Player player)
         {

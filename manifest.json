@@ -1,6 +1,6 @@
 {
   "name": "GroupRecipes_with_Popups",
-  "version_number": "1.0.1",
+  "version_number": "1.0.2",
   "website_url": "https://github.com/555maggot666/grouprecipes-with-popups",
   "description": "Shares material, recipe, piece and crafting-station unlocks with every player in the world — and shows the original Valheim unlock popups for each entry.",
   "dependencies": [
