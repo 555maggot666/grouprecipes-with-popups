@@ -12,7 +12,7 @@ namespace GroupRecipesWithPopups
     {
         public const string PluginGuid = "555maggot666.GroupRecipesWithPopups";
         public const string PluginName = "GroupRecipes with Popups";
-        public const string PluginVersion = "1.0.0";
+        public const string PluginVersion = "1.0.2";
 
         private static readonly HashSet<string> WarnedKeys = new HashSet<string>(StringComparer.Ordinal);
 

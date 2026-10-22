@@ -35,6 +35,7 @@ namespace GroupRecipesWithPopups.Tests
             ("file-station-upgrade-appended", FileStationUpgrade),
             ("pump-silent-drain", PumpSilentDrain),
             ("paths-sanitize", PathsSanitize),
+            ("version-consistency", VersionConsistency),
         };
 
         private static int Main()
@@ -440,6 +441,34 @@ namespace GroupRecipesWithPopups.Tests
             Check(!GrwpPaths.SanitizeFileComponent("../../x").Contains("/"), "traversal keeps a separator");
             Check(GrwpPaths.SanitizeFileComponent(new string('x', 500)).Length <= 64, "length cap");
             AreEqual("Welt_ÄÖ_-42.txt", GrwpPaths.LedgerFileName("Welt_ÄÖ", -42), "umlauts and negative uid");
+        }
+
+        private static void VersionConsistency()
+        {
+            string dir = AppContext.BaseDirectory;
+            while (dir != null && !File.Exists(Path.Combine(dir, "GroupRecipesWithPopups.sln")))
+            {
+                dir = Path.GetDirectoryName(dir.TrimEnd(Path.DirectorySeparatorChar));
+            }
+
+            Check(dir != null, "repo root with GroupRecipesWithPopups.sln not found");
+            string plugin = File.ReadAllText(Path.Combine(dir, "src/GroupRecipesWithPopups/Plugin.cs"));
+            System.Text.RegularExpressions.Match match =
+                System.Text.RegularExpressions.Regex.Match(plugin, "PluginVersion\\s*=\\s*\"([^\"]+)\"");
+            Check(match.Success, "PluginVersion constant not found in Plugin.cs");
+            string version = match.Groups[1].Value;
+
+            string manifest = File.ReadAllText(Path.Combine(dir, "manifest.json"));
+            Check(manifest.Contains("\"version_number\": \"" + version + "\""),
+                "manifest.json version_number differs from PluginVersion " + version);
+
+            string pluginProject = File.ReadAllText(Path.Combine(dir, "src/GroupRecipesWithPopups/GroupRecipesWithPopups.csproj"));
+            Check(pluginProject.Contains("<Version>" + version + "</Version>"),
+                "plugin csproj Version differs from PluginVersion " + version);
+
+            string coreProject = File.ReadAllText(Path.Combine(dir, "src/GroupRecipesWithPopups.Core/GroupRecipesWithPopups.Core.csproj"));
+            Check(coreProject.Contains("<Version>" + version + "</Version>"),
+                "core csproj Version differs from PluginVersion " + version);
         }
     }
 }
