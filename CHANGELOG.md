@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1
+- Rebuilds the build-piece catalogue once when an incoming piece is unknown, so mods that add build pieces
+  without adding items or recipes are picked up instead of being skipped.
+- Holds back piece unlocks while the build ui is still loading and retries them once the hud is ready,
+  instead of letting the vanilla call half-finish without a popup.
+- `Tick`-based retry for those held back pieces, capped at 200 entries.
+
 ## 1.0.0
 - Initial release.
 - Shares materials/items, recipes, build pieces and crafting-station unlocks between all players of a world.

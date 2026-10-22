@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using GroupRecipesWithPopups.Core;
 using UnityEngine;
 
@@ -11,13 +12,73 @@ namespace GroupRecipesWithPopups.Game
     /// </summary>
     internal sealed class VanillaUnlocker
     {
+        private const int MaxDeferred = 200;
+
         private readonly GameCatalog _catalog;
         private readonly PlayerKnowledgeBridge _bridge;
+        private readonly List<KnowledgeEntry> _deferredPieces = new List<KnowledgeEntry>();
+        private readonly HashSet<string> _deferredKeys = new HashSet<string>(StringComparer.Ordinal);
 
         public VanillaUnlocker(GameCatalog catalog, PlayerKnowledgeBridge bridge)
         {
             _catalog = catalog;
             _bridge = bridge;
+        }
+
+        /// <summary>
+        /// The vanilla AddKnownPiece path writes into Hud.m_buildUi for the "recently used" strip. Calling it
+        /// while the hud is still being constructed throws after the piece is already in the known set, which
+        /// would leave that one piece without a popup. So pieces are held back until the build ui exists.
+        /// </summary>
+        private static bool IsBuildHudReady()
+        {
+            Hud hud = Hud.instance;
+            return hud != null && hud.m_buildUi != null;
+        }
+
+        private bool DeferPiece(KnowledgeEntry entry)
+        {
+            if (_deferredPieces.Count >= MaxDeferred)
+            {
+                return false;
+            }
+
+            if (_deferredKeys.Add(entry.Key))
+            {
+                _deferredPieces.Add(entry);
+            }
+
+            return true;
+        }
+
+        /// <summary>Retries pieces that were held back because the build ui was not ready yet.</summary>
+        public void Tick(Player player)
+        {
+            if (player == null || _deferredPieces.Count == 0 || !IsBuildHudReady())
+            {
+                return;
+            }
+
+            KnowledgeEntry[] pending = _deferredPieces.ToArray();
+            _deferredPieces.Clear();
+            _deferredKeys.Clear();
+
+            for (int i = 0; i < pending.Length; i++)
+            {
+                if (_bridge.IsKnown(player, pending[i]))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    Apply(player, pending[i], showPopup: true);
+                }
+                catch (Exception ex)
+                {
+                    Plugin.Log.LogWarning("Retrying the held back piece " + pending[i] + " failed: " + ex.GetType().Name);
+                }
+            }
         }
 
         /// <summary>Applies the entry; returns true when it changed the player's knowledge.</summary>
@@ -118,7 +179,14 @@ namespace GroupRecipesWithPopups.Game
 
         private bool ApplyPiece(Player player, KnowledgeEntry entry, bool showPopup)
         {
-            if (!_catalog.TryGetPiece(entry.Key, out Piece piece))
+            if (!_catalog.TryGetPiece(entry.Key, out Piece piece) && _catalog.TryRebuildAfterMiss())
+            {
+                // A mod may have added build pieces without changing the item or recipe counts, which is what
+                // the cache normally watches. Rebuild once and retry before treating the key as unknown.
+                _catalog.TryGetPiece(entry.Key, out piece);
+            }
+
+            if (piece == null)
             {
                 Plugin.WarnOnce("missing-piece-" + entry.Key, "Piece '" + entry.Key + "' does not exist in this game; adding it to the known recipes directly.");
                 bool written = _bridge.TryWrite(player, entry);
@@ -132,6 +200,18 @@ namespace GroupRecipesWithPopups.Game
 
             if (!showPopup)
             {
+                return _bridge.TryWrite(player, entry);
+            }
+
+            if (!IsBuildHudReady())
+            {
+                // Still loading. Hold the piece back instead of letting the vanilla call half-finish.
+                if (DeferPiece(entry))
+                {
+                    return false;
+                }
+
+                Plugin.Log.LogWarning("Build ui is not ready yet and the hold back list is full; applying " + entry + " without a popup.");
                 return _bridge.TryWrite(player, entry);
             }
 

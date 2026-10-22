@@ -6,10 +6,10 @@
     <Nullable>disable</Nullable>
     <AssemblyName>GroupRecipesWithPopups</AssemblyName>
     <RootNamespace>GroupRecipesWithPopups</RootNamespace>
-    <Version>1.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
-    <InformationalVersion>1.0.0</InformationalVersion>
+    <Version>1.0.1</Version>
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+    <FileVersion>1.0.1.0</FileVersion>
+    <InformationalVersion>1.0.1</InformationalVersion>
     <Product>GroupRecipes with Popups</Product>
     <Company>555maggot666</Company>
     <Copyright>Copyright (c) 2026 555maggot666</Copyright>

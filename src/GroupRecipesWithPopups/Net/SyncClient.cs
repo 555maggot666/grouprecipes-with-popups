@@ -191,6 +191,7 @@ namespace GroupRecipesWithPopups.Net
             }
 
             _pump.Tick(deltaSeconds);
+            _unlocker.Tick(player);
             int applied = 0;
             KnowledgeEntry entry;
             for (int guard = 0; guard < 500 && _pump.TryDequeueSilent(out entry); guard++)

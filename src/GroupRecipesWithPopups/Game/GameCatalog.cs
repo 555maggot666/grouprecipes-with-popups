@@ -22,6 +22,31 @@ namespace GroupRecipesWithPopups.Game
         private int _dbRecipeCount = -1;
         private ZNetScene _scene;
         private int _sceneCount = -1;
+        private float _lastForcedRebuild = float.NegativeInfinity;
+
+        /// <summary>
+        /// Rebuilds the tables when a lookup missed and the caches may be stale, for example because a mod
+        /// registered build pieces without touching the item or recipe counts. Throttled so a permanently
+        /// unknown key cannot force a rebuild every tick.
+        /// </summary>
+        public bool TryRebuildAfterMiss()
+        {
+            ObjectDB db = ObjectDB.instance;
+            if (db == null || db.m_items == null || db.m_recipes == null || db.m_items.Count == 0)
+            {
+                return false;
+            }
+
+            float now = Time.realtimeSinceStartup;
+            if (now - _lastForcedRebuild < 2f)
+            {
+                return false;
+            }
+
+            _lastForcedRebuild = now;
+            RebuildObjectTables(db);
+            return true;
+        }
 
         /// <summary>
         /// Brings the caches up to date. Returns false while the object database is not ready yet
