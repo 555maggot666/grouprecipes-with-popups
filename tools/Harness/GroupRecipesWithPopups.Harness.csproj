@@ -1,0 +1,79 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Test harness plugin. NOT part of the Thunderstore package: it is a second BepInEx plugin that is loaded
+    into a dedicated server (or a client) and drives the real code paths (wire format, server receive path,
+    ledger file) inside the live Unity runtime, then writes a JSON report.
+
+    Build:  dotnet build tools/Harness -c Release   (same env vars as the main project, plus a built
+            ValheimTestKit.dll — see VALHEIM_TESTKIT_DLL below)
+    Deploy: copy GroupRecipesWithPopups.Harness.dll and ValheimTestKit.dll into BepInEx/plugins/ next to the mod.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>10.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <AssemblyName>GroupRecipesWithPopups.Harness</AssemblyName>
+    <RootNamespace>GroupRecipesWithPopups.Harness</RootNamespace>
+    <Version>1.0.0</Version>
+    <Deterministic>true</Deterministic>
+    <DebugType>none</DebugType>
+    <NoWarn>$(NoWarn);MSB3277;CS1701;CS1702;NU1701;CS0618</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <GrwpManagedDir>$(VH_MANAGED_DIR)</GrwpManagedDir>
+    <GrwpCoreDir>$(BEPINEX_CORE_DIR)</GrwpCoreDir>
+  </PropertyGroup>
+
+  <Target Name="HarnessCheckReferencePaths" BeforeTargets="BeforeResolveReferences;ResolveAssemblyReferences;CoreCompile">
+    <Error Condition="'$(GrwpManagedDir)' == ''"
+           Text="VH_MANAGED_DIR is not set. Point it at the Valheim 'Managed' directory." />
+    <Error Condition="'$(GrwpCoreDir)' == ''"
+           Text="BEPINEX_CORE_DIR is not set. Point it at the BepInEx 'core' directory." />
+    <Error Condition="'$(GrwpManagedDir)' != '' And !Exists('$(GrwpManagedDir)/assembly_valheim.dll')"
+           Text="VH_MANAGED_DIR='$(GrwpManagedDir)' does not contain assembly_valheim.dll." />
+  </Target>
+
+  <ItemGroup>
+    <!-- ValheimTestKit provides the suite base class, the synthetic peer (RpcSynth) and the report format.
+         Point VALHEIM_TESTKIT_DLL at a built ValheimTestKit.dll; the fallback assumes both repos sit next to
+         each other. -->
+    <Reference Include="ValheimTestKit">
+      <HintPath Condition="'$(VALHEIM_TESTKIT_DLL)' != ''">$(VALHEIM_TESTKIT_DLL)</HintPath>
+      <HintPath Condition="'$(VALHEIM_TESTKIT_DLL)' == ''">$(MSBuildThisFileDirectory)../../../valheim-mod-testkit/src/ValheimTestKit/bin/Release/netstandard2.1/ValheimTestKit.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <ProjectReference Include="..\..\src\GroupRecipesWithPopups.Core\GroupRecipesWithPopups.Core.csproj" />
+    <ProjectReference Include="..\..\src\GroupRecipesWithPopups\GroupRecipesWithPopups.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="BepInEx">
+      <HintPath>$(GrwpCoreDir)/BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(GrwpCoreDir)/0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="assembly_utils">
+      <HintPath>$(GrwpManagedDir)/assembly_utils.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="assembly_valheim">
+      <HintPath>$(GrwpManagedDir)/assembly_valheim.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(GrwpManagedDir)/UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(GrwpManagedDir)/UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>
